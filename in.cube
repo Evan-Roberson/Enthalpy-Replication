@@ -1,0 +1,90 @@
+#Stillinger-Weber 
+log		log.cube
+units           real
+atom_style      atomic
+atom_modify     map array
+boundary        p p p
+
+read_data	mw.data2
+
+pair_style      sw		
+pair_coeff      * * mW.sw mW 
+
+velocity	all create 150.0 89653
+run		0
+velocity	all scale 150.0 
+
+dump		1 all custom 10000 dump.cube1.lammpstrj id mass x y z fx fy fz
+                          
+thermo_style    custom step elapsed temp density press vol pe ke etotal enthalpy
+
+thermo_modify	lost warn
+thermo          1000
+
+
+neighbor        4.5 bin
+neigh_modify    every 1 delay 0 check yes
+
+#fix temp or fix temp/press   tstart/tstop/tdamp    pstart/pstop/pdamp
+fix             1 all npt temp 150.0 150.0 100 iso 1.0 1.0 500  
+
+# femtoseconds
+timestep        10.0
+run		100000
+
+write_restart	restart1.mw
+
+clear
+read_restart	restart1.mw
+
+pair_style      sw
+pair_coeff      * * mW.sw mW
+
+neighbor        4.5 bin
+neigh_modify    every 1 delay 0 check yes
+
+fix             1 all npt temp 150.0 273.0 100 iso 1.0 1.0 500
+dump		1 all custom 10000 dump.cube2.lammpstrj id mass x y z fx fy fz
+
+thermo_style    custom step elapsed temp density press vol pe ke etotal enthalpy
+thermo          1000
+
+run             1230000
+write_restart   restart2.mw
+
+clear
+read_restart    restart2.mw
+
+pair_style      sw
+pair_coeff      * * mW.sw mW
+
+neighbor        4.5 bin
+neigh_modify    every 1 delay 0 check yes
+
+fix             1 all npt temp 273.0 150.0 100 iso 1.0 1.0 500
+dump            1 all custom 10000 dump.cube3.lammpstrj id mass x y z fx fy fz
+
+thermo_style    custom step elapsed temp density press vol pe ke etotal enthalpy
+thermo          1000
+run             1230000
+
+
+write_restart   restart3.mw
+
+clear
+read_restart    restart3.mw
+
+pair_style      sw
+pair_coeff      * * mW.sw mW
+
+neighbor        4.5 bin
+neigh_modify    every 1 delay 0 check yes
+
+fix             1 all npt temp 150.0 150.0 100 iso 1.0 1.0 500
+dump            1 all custom 10000 dump.cube4.lammpstrj id mass x y z fx fy fz
+
+thermo_style    custom step elapsed temp density press vol pe ke etotal enthalpy
+thermo          1000
+run             500000
+
+write_data mw-explicit.data nocoeff
